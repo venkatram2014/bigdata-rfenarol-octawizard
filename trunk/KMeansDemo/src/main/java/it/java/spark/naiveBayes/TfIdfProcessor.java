@@ -1,17 +1,19 @@
 package it.java.spark.naiveBayes;
  
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.List;
- 
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.mahout.common.Pair;
-import org.apache.mahout.math.VectorWritable;
+import org.apache.mahout.vectorizer.DefaultAnalyzer;
 import org.apache.mahout.vectorizer.DictionaryVectorizer;
 import org.apache.mahout.vectorizer.DocumentProcessor;
 import org.apache.mahout.vectorizer.common.PartialVectorMerger;
@@ -24,35 +26,33 @@ public class TfIdfProcessor {
      
     public static void main(String args[]) throws Exception {
         Configuration configuration = new Configuration();
+        
+		String newInput = "seqfileNew";
+		File newfile = new File(newInput);
+		// if file doesnt exists, then create it
+		if (!newfile.exists()) {
+			newfile.createNewFile();
+		}
+		FileWriter newfw = new FileWriter(newfile.getAbsoluteFile(), true);
+		BufferedWriter newbw = new BufferedWriter(newfw);
+		
+		String sCurrentLine;
+		BufferedReader br = new BufferedReader(new FileReader("seqfile"));
+		
+		while ((sCurrentLine = br.readLine()) != null) {
+			String newLine = sCurrentLine.replaceAll("\"\"", "\"null\"");
+			newbw.write(newLine+"\n");
+		}
+		newbw.close();
+		br.close();
          
         FileSystem fs = FileSystem.get(configuration);
-        Path sequencePath = new Path(outputDir, "sequence");
+        Path sequencePath = new Path("seqfileNew");
         Path tokenizedPath = new Path(outputDir, DocumentProcessor.TOKENIZED_DOCUMENT_OUTPUT_FOLDER );
  
-        tokenizeDocuments(fs, configuration, sequencePath, tokenizedPath);
-        processTfIdf(configuration, tokenizedPath);        
-        readSequenceFile(fs, configuration, "wordcount", "part-r-00000", new LongWritable());
-        readSequenceFile(fs, configuration, "tfidf/tfidf-vectors", "part-r-00000", new VectorWritable());
+        processTfIdf(configuration, sequencePath, tokenizedPath);        
     }
-     
-    public static void readSequenceFile(FileSystem fs, Configuration configuration, String path, String file,
-            Writable writable) 
-            throws Exception {
-        Path vectorsFolder = new Path( outputDir, path );
-        SequenceFile.Reader reader = new SequenceFile.Reader(fs,
-                new Path(vectorsFolder, file), configuration);
- 
-        Text key = new Text();
-        Writable value = writable;
-        while (reader.next(key, value)) {
-            if ( writable instanceof LongWritable ) {
-                System.out.format("%12s  %d\n", key.toString(), ((LongWritable)value).get());
-            } else if ( writable instanceof VectorWritable ) {
-                System.out.format("%12s  %s\n", key.toString(), ((VectorWritable)value).get().asFormatString());                
-            }        
-        }
-        reader.close();
-    }
+
      
     public static void tokenizeDocuments(FileSystem fs, Configuration configuration, Path sequencePath, Path tokenizedPath)
             throws Exception {
@@ -91,13 +91,15 @@ public class TfIdfProcessor {
          
         writer.close();
  
-        DocumentProcessor.tokenizeDocuments(sequencePath, StandardAnalyzer.class, tokenizedPath, configuration);
+        DocumentProcessor.tokenizeDocuments(sequencePath, DefaultAnalyzer.class, tokenizedPath, configuration);
     }
      
-    public static void processTfIdf(Configuration configuration, Path tokenizedPath) 
+    public static void processTfIdf(Configuration configuration, Path sequencePath, Path tokenizedPath) 
             throws Exception {
         boolean sequential    = false;
         boolean named         = false;
+        
+        DocumentProcessor.tokenizeDocuments(sequencePath, DefaultAnalyzer.class, tokenizedPath, configuration);
  
         Path wordCount = new Path( outputDir );
         Path tfidf = new Path( outputDir + "tfidf" );
