@@ -1,4 +1,4 @@
-package com.ezzadeen;
+package it.java.spark.naiveBayes;
  
 import java.util.List;
  
@@ -17,7 +17,7 @@ import org.apache.mahout.vectorizer.DocumentProcessor;
 import org.apache.mahout.vectorizer.common.PartialVectorMerger;
 import org.apache.mahout.vectorizer.tfidf.TFIDFConverter;
  
-public class TfIdfTest {
+public class TfIdfProcessor {
  
     static String inputDir =  "input/";
     static String outputDir = "output/";
