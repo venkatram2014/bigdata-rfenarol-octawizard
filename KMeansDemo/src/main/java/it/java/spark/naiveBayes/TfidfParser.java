@@ -37,8 +37,15 @@ public class TfidfParser {
 			br = new BufferedReader(new FileReader(input));
 			
 			int numLines = 0;
+			int max_tfidfVector_lenght = 0;
 			while ((sCurrentLine = br.readLine()) != null) {
 				numLines ++;
+				if (sCurrentLine.contains("{")){
+					int start = sCurrentLine.indexOf('{');
+					String array_string = sCurrentLine.substring(start, sCurrentLine.length()-1);
+					String[] records = array_string.split(",");
+					if(records.length > max_tfidfVector_lenght) max_tfidfVector_lenght = records.length;
+				}
 			}
 
 			
@@ -60,6 +67,12 @@ public class TfidfParser {
 						tokenizer.nextToken();
 						String double_string = tokenizer.nextToken();
 						line += double_string+"\t";
+					}
+					if(records.length<max_tfidfVector_lenght){
+						int difference = max_tfidfVector_lenght-records.length;
+						for(int i=0; i<difference; i++){
+							line+="0.0"+"\t";
+						}
 					}
 										
 					if(lines < trainLines){

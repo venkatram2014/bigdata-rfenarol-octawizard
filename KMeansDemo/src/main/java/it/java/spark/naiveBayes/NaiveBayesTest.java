@@ -1,5 +1,6 @@
 package it.java.spark.naiveBayes;
 
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.spark.api.java.JavaPairRDD;
@@ -49,12 +50,22 @@ public class NaiveBayesTest {
 						return model.predict(p.features());
 					}
 				});
+		
 		JavaPairRDD<Double, Double> predictionAndLabel = 
 				prediction.zip(testPoints.map(new Function<LabeledPoint, Double>() {
 					@Override public Double call(LabeledPoint p) {
 						return p.label();
 					}
 				}));
+		
+		for(Double d : prediction.collect()){
+			System.out.println(d);
+		}
+		
+		Map<Double, Object> mappa = predictionAndLabel.countByKey();
+		for(Double key : mappa.keySet()){
+			System.out.println(key + "\t" + mappa.get(key));
+		}
 		
 		double accuracy = 1.0 * predictionAndLabel.filter(new Function<Tuple2<Double, Double>, Boolean>() {
 			@Override public Boolean call(Tuple2<Double, Double> pl) {
