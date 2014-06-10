@@ -1,10 +1,5 @@
 package it.java.spark.naiveBayes;
  
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
@@ -26,28 +21,9 @@ public class TfIdfProcessor {
      
     public static void main(String args[]) throws Exception {
         Configuration configuration = new Configuration();
-        
-		String newInput = "seqfileNew";
-		File newfile = new File(newInput);
-		// if file doesnt exists, then create it
-		if (!newfile.exists()) {
-			newfile.createNewFile();
-		}
-		FileWriter newfw = new FileWriter(newfile.getAbsoluteFile(), true);
-		BufferedWriter newbw = new BufferedWriter(newfw);
-		
-		String sCurrentLine;
-		BufferedReader br = new BufferedReader(new FileReader("seqfile"));
-		
-		while ((sCurrentLine = br.readLine()) != null) {
-			String newLine = sCurrentLine.replaceAll("\"\"", "\"null\"");
-			newbw.write(newLine+"\n");
-		}
-		newbw.close();
-		br.close();
          
         FileSystem fs = FileSystem.get(configuration);
-        Path sequencePath = new Path("seqfileNew");
+        Path sequencePath = new Path("seqfile");
         Path tokenizedPath = new Path(outputDir, DocumentProcessor.TOKENIZED_DOCUMENT_OUTPUT_FOLDER );
  
         processTfIdf(configuration, sequencePath, tokenizedPath);        
