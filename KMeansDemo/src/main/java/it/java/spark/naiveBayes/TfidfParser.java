@@ -16,7 +16,6 @@ public class TfidfParser {
 		BufferedReader br = null;
 
 		try {
-
 			File trainfile = new File("train_labeled_points.txt");
 			File testfile = new File("test_labeled_point.txt");
 
@@ -41,6 +40,7 @@ public class TfidfParser {
 			while ((sCurrentLine = br.readLine()) != null) {
 				numLines ++;
 			}
+
 			
 			int trainLines = numLines*60/100;
 			int lines = 0;
@@ -61,7 +61,7 @@ public class TfidfParser {
 						String double_string = tokenizer.nextToken();
 						line += double_string+"\t";
 					}
-					
+										
 					if(lines < trainLines){
 						trainbw.write(line+"\n");
 					}else{
