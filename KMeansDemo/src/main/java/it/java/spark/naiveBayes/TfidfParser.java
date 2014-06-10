@@ -17,19 +17,34 @@ public class TfidfParser {
 
 		try {
 
-			File file = new File("labeled_point.txt");
+			File trainfile = new File("train_labeled_points.txt");
+			File testfile = new File("test_labeled_point.txt");
 
 			// if file doesnt exists, then create it
-			if (!file.exists()) {
-				file.createNewFile();
+			if (!trainfile.exists()) {
+				trainfile.createNewFile();
+			}
+			// if file doesnt exists, then create it
+			if (!testfile.exists()) {
+				testfile.createNewFile();
 			}
 
-			FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
-			BufferedWriter bw = new BufferedWriter(fw);
+			FileWriter trainfw = new FileWriter(trainfile.getAbsoluteFile(), true);
+			BufferedWriter trainbw = new BufferedWriter(trainfw);
+			FileWriter testfw = new FileWriter(testfile.getAbsoluteFile(), true);
+			BufferedWriter testbw = new BufferedWriter(testfw);
 
 			String sCurrentLine;
 			br = new BufferedReader(new FileReader(input));
-
+			
+			int numLines = 0;
+			while ((sCurrentLine = br.readLine()) != null) {
+				numLines ++;
+			}
+			
+			int trainLines = numLines*60/100;
+			int lines = 0;
+			br = new BufferedReader(new FileReader(input));
 			while ((sCurrentLine = br.readLine()) != null) {
 				if (sCurrentLine.contains("{")){
 					String line;
@@ -46,10 +61,17 @@ public class TfidfParser {
 						String double_string = tokenizer.nextToken();
 						line += double_string+"\t";
 					}
-					bw.write(line+"\n");
+					
+					if(lines < trainLines){
+						trainbw.write(line+"\n");
+					}else{
+						testbw.write(line+"\n");
+					}
+					lines++;
 				}
 			}
-			bw.close();
+			trainbw.close();
+			testbw.close();
 
 		} catch (IOException e) {
 			e.printStackTrace();
