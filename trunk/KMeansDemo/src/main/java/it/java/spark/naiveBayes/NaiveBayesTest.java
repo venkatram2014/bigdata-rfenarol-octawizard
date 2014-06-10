@@ -9,6 +9,8 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.mllib.classification.NaiveBayes;
 import org.apache.spark.mllib.classification.NaiveBayesModel;
 import org.apache.spark.mllib.regression.LabeledPoint;
+import org.apache.spark.util.Vector;
+
 
 import scala.Tuple2;
 
@@ -18,7 +20,10 @@ public class NaiveBayesTest {
 		JavaSparkContext sc = new JavaSparkContext("local", "JavaKMeans",
 				System.getenv("SPARK_HOME"), JavaSparkContext.jarOfClass(JavaKMeans.class));
 
-		JavaRDD<LabeledPoint> training = null; // training set
+//	    JavaRDD<String> lines = sc.textFile(args[1]);
+//	    JavaRDD<LabeledPoint> points = lines.map(new ParsePoint()).cache();
+	    
+		JavaRDD<LabeledPoint> training = null; // new JavaRDD<LabeledPoint>(, features[]); // training set
 		JavaRDD<LabeledPoint> test = null; // test set
 
 		final NaiveBayesModel model = NaiveBayes.train(training.rdd(), 1.0);
