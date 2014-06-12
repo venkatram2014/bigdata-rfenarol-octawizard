@@ -59,19 +59,27 @@ public class NaiveBayesTest {
 				}));
 		
 		for(Double d : prediction.collect()){
-			System.out.println(d);
+			//System.out.println(d);
 		}
 		
 		Map<Double, Object> mappa = predictionAndLabel.countByKey();
 		for(Double key : mappa.keySet()){
-			System.out.println(key + "\t" + mappa.get(key));
+			//System.out.println(key + "\t" + mappa.get(key));
 		}
 		
-		double accuracy = 1.0 * predictionAndLabel.filter(new Function<Tuple2<Double, Double>, Boolean>() {
-			@Override public Boolean call(Tuple2<Double, Double> pl) {
-				return pl._1() == pl._2();
-			}
-		}).count() / testPoints.count();
+//		double count = predictionAndLabel.filter(new Function<Tuple2<Double, Double>, Boolean>() {
+//			@Override public Boolean call(Tuple2<Double, Double> pl) {
+//				System.out.println(pl._1() + "\t" + pl._2());
+//				return pl._1() == pl._2();
+//			}
+//		}).;
+		double count = 0;
+		for (Tuple2<Double, Double> t : predictionAndLabel.collect()){
+			if (t._1().equals(t._2()))
+				count ++;
+		}
+		double accuracy = 1.0 * count/ testPoints.count();
+		
 		
 		System.out.println("ACCURACY:" + accuracy);
 

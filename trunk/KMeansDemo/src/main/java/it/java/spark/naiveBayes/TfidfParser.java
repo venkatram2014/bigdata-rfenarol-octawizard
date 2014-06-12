@@ -55,10 +55,13 @@ public class TfidfParser {
 			while ((sCurrentLine = br.readLine()) != null) {
 				if (sCurrentLine.contains("{")){
 					String line;
-					if (sCurrentLine.matches("Key: /isSpider/.*"))
+					if (sCurrentLine.matches("Key: /isSpider/.*")){
 						line = "1,";
-					else
+					}
+					else{
 						line = "0,";
+					}
+						
 					int start = sCurrentLine.indexOf('{');
 					String array_string = sCurrentLine.substring(start, sCurrentLine.length()-1);
 					String[] records = array_string.split(",");
