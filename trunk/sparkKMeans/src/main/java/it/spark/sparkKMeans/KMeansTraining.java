@@ -1,36 +1,19 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package it.java.spark.kmeans;
-
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
-import org.apache.spark.mllib.clustering.KMeans;
-import org.apache.spark.mllib.clustering.KMeansModel;
-import org.apache.spark.rdd.RDD;
+package it.spark.sparkKMeans;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.mllib.clustering.KMeans;
+import org.apache.spark.mllib.clustering.KMeansModel;
 
 /**
  * Example using MLLib KMeans from Java.
@@ -40,17 +23,21 @@ public final class KMeansTraining {
 	static class ParsePoint extends Function<String, double[]> {
 		private static final long serialVersionUID = -8651957309737119456L;
 		private static final Pattern SPACE = Pattern.compile(" ");
-
+		
 		@Override
 		public double[] call(String line) {
 			String[] tok = SPACE.split(line);
-			double[] point = new double[tok.length];
-			for (int i = 0; i < tok.length; ++i) {
-				point[i] = Double.parseDouble(tok[i]);
+			double[] point = new double[tok.length-1];
+			// parto dal secondo elemento della riga, il primo è l'id del vettore
+			for (int i = 1; i < tok.length; ++i) {
+				point[i-1] = Double.parseDouble(tok[i]);
 			}
+			id2vector.put(Integer.parseInt(tok[0]), point);
 			return point;
 		}
 	}
+
+	private static HashMap<Integer, double[]> id2vector;
 
 	/**
 	 * 
@@ -68,8 +55,8 @@ public final class KMeansTraining {
 		String input = args[0];
 		String output = args[1]+"/k-means_out.txt";
 		String master = args[2];
-		int k = Integer.parseInt(args[3] /* 2 */);
-		int iterations = Integer.parseInt(args[4]/*"10"*/);
+		int k = Integer.parseInt(args[3]);
+		int iterations = Integer.parseInt(args[4]);
 		int runs = 1;
 		if (args.length > 5) {
 			runs = Integer.parseInt(args[5]);
@@ -88,9 +75,10 @@ public final class KMeansTraining {
 		
 		//TODO quando siamo nel cluster, cambiare il context di SPARK, non è local
 		JavaSparkContext sc = new JavaSparkContext(master /*"local"*/, "JavaKMeans",
-				System.getenv("SPARK_HOME"), JavaSparkContext.jarOfClass(JavaKMeans.class));
-		JavaRDD<String> lines = sc.textFile(input /*"kmeans_data.txt"*/);	//"kmeans_data.txt"
+				System.getenv("SPARK_HOME"), JavaSparkContext.jarOfClass(KMeansTraining.class));
+		JavaRDD<String> lines = sc.textFile(input);	//"kmeans_data.txt"
 
+		id2vector = new HashMap<Integer, double[]>();
 		JavaRDD<double[]> points = lines.map(new ParsePoint());
 
 		KMeansModel model = KMeans.train(points.rdd(), k, iterations, runs);
@@ -98,7 +86,6 @@ public final class KMeansTraining {
 		bw.write("---- Cluster centers ----\n");
 		int cont = 0;
 		for (double[] center : model.clusterCenters()) {
-			System.out.println(" " + Arrays.toString(center));
 			bw.write("Cluster"+cont+" centroid: "+Arrays.toString(center)+"\n");
 			cont ++;
 		}
@@ -107,10 +94,14 @@ public final class KMeansTraining {
 		bw.write("\nCost: "+ cost+"\n");
 
 		//per ogni punto di input, fai la predizione
-		List<double[]> iterable_points = points.collect();
-		bw.write("\n\tpoint\t\t-->\tcluster\n");
-		for (double[] point : iterable_points)
-			bw.write(Arrays.toString(point) +" --> "+model.predict(point)+"\n");
+//		List<double[]> iterable_points = points.collect();
+//		bw.write("\n\tpoint\t\t-->\tcluster\n");
+//		for (double[] point : iterable_points)
+//			bw.write(Arrays.toString(point) +" --> "+model.predict(point)+"\n");
+		for (Integer i : id2vector.keySet()){
+			double[] point = id2vector.get(i);
+			bw.write("vector id ["+i+"] --> "+model.predict(point)+"\n");
+		}
 
 		bw.close();
 		System.exit(0);
