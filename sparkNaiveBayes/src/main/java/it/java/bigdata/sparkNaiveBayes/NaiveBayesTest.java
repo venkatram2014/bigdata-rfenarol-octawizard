@@ -1,5 +1,8 @@
 package it.java.bigdata.sparkNaiveBayes;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -16,6 +19,7 @@ import scala.Tuple2;
 public class NaiveBayesTest {
 
 	static class ParsePoint extends Function<String, LabeledPoint> {
+		private static final long serialVersionUID = -7288037060883263596L;
 		private static final Pattern COMMA = Pattern.compile(",");
 		private static final Pattern SPACE = Pattern.compile("\t");
 
@@ -33,7 +37,7 @@ public class NaiveBayesTest {
 	}
 
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		JavaSparkContext sc = new JavaSparkContext("local", "NaiveBayesTest",
 				System.getenv("SPARK_HOME"), JavaSparkContext.jarOfClass(NaiveBayesTest.class));
 
@@ -41,6 +45,9 @@ public class NaiveBayesTest {
 		JavaRDD<LabeledPoint> trainingPoints = trainingdata.map(new ParsePoint()).cache();
 		JavaRDD<String> testdata = sc.textFile(args[0] + "/test_labeled_point.txt");
 		JavaRDD<LabeledPoint> testPoints = testdata.map(new ParsePoint()).cache();
+		
+		FileWriter fw = new FileWriter("bayes_output.txt", true);
+		BufferedWriter bw = new BufferedWriter(fw);
 
 		final NaiveBayesModel model = NaiveBayes.train(trainingPoints.rdd(), 1.0);
 		
@@ -62,10 +69,20 @@ public class NaiveBayesTest {
 			//System.out.println(d);
 		}
 		
+//		JavaPairRDD<Double, List<Double>> class2list = predictionAndLabel.groupByKey();
+//		List<Tuple2<Double, List<Double>>> class_list = class2list.collect();
+//		for (Tuple2<Double, List<Double>> t : class_list){
+//			System.out.println("CLASSE: "+t._1+"\tCOUNT: "+ t._2.size());
+//		}
+		
 		Map<Double, Object> mappa = predictionAndLabel.countByKey();
 		for(Double key : mappa.keySet()){
-			//System.out.println(key + "\t" + mappa.get(key));
+//			l.add("CLASSE: "+key.intValue() + "\tCOUNT: " + mappa.get(key));
 		}
+		bw.write("---- confusion matrix ----\n");
+		bw.write("isSpider(=1)\t isNotSpider(=0)\n");
+		bw.write(mappa.get(1.0) + "\t\t" + countSpiderError(predictionAndLabel)+"\t| isSpider = 1\n");
+		bw.write(countNotSpiderError(predictionAndLabel) + "\t\t"+mappa.get(0.0)+"\t| isNotSpider = 0\n");
 		
 //		double count = predictionAndLabel.filter(new Function<Tuple2<Double, Double>, Boolean>() {
 //			@Override public Boolean call(Tuple2<Double, Double> pl) {
@@ -81,8 +98,31 @@ public class NaiveBayesTest {
 		double accuracy = 1.0 * count/ testPoints.count();
 		
 		
-		System.out.println("ACCURACY:" + accuracy);
+		bw.write("\nGeneral accuracy: " + accuracy);
 
+		bw.close();
+	}
+
+
+	private static Integer countSpiderError(
+			JavaPairRDD<Double, Double> predictionAndLabel) {
+		int count = 0;
+		for (Tuple2<Double, Double> t : predictionAndLabel.collect()){
+			if (t._2.intValue() == 1 && t._1.intValue() == 0)
+				count ++;
+		}
+		return count;
+	}
+
+
+	private static Integer countNotSpiderError(
+			JavaPairRDD<Double, Double> predictionAndLabel) {
+		int count = 0;
+		for (Tuple2<Double, Double> t : predictionAndLabel.collect()){
+			if (t._2.intValue() == 0 && t._1.intValue() == 1)
+				count ++;
+		}
+		return count;
 	}
 
 }

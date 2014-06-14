@@ -1,0 +1,12 @@
+---- confusion matrix ----
+isSpider(=1)	 isNotSpider(=0)
+1	2	| isSpider = 1
+1	36	| isNotSpider = 0
+
+General accuracy: 0.918918918918919
+---- confusion matrix ----
+isSpider(=1)	 isNotSpider(=0)
+1		2	| isSpider = 1
+1		36	| isNotSpider = 0
+
+General accuracy: 0.918918918918919
