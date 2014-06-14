@@ -81,8 +81,14 @@ public class NaiveBayesTest {
 		}
 		bw.write("---- confusion matrix ----\n");
 		bw.write("isSpider(=1)\t isNotSpider(=0)\n");
-		bw.write(mappa.get(1.0) + "\t\t" + countSpiderError(predictionAndLabel)+"\t| isSpider = 1\n");
-		bw.write(countNotSpiderError(predictionAndLabel) + "\t\t"+mappa.get(0.0)+"\t| isNotSpider = 0\n");
+		Long isSpider = (Long) mappa.get(1.0);
+		if (isSpider == null)
+			isSpider = 0L;
+		Long isNotSpider = (Long) mappa.get(0.0);
+		if (isNotSpider == null)
+			isNotSpider = 0L;
+		bw.write(isSpider + "\t\t" + countSpiderError(predictionAndLabel)+"\t| isSpider = 1\n");
+		bw.write(countNotSpiderError(predictionAndLabel) + "\t\t"+isNotSpider+"\t| isNotSpider = 0\n");
 		
 //		double count = predictionAndLabel.filter(new Function<Tuple2<Double, Double>, Boolean>() {
 //			@Override public Boolean call(Tuple2<Double, Double> pl) {
