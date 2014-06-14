@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.spark.api.java.JavaRDD;
@@ -98,11 +97,24 @@ public final class KMeansTraining {
 //		bw.write("\n\tpoint\t\t-->\tcluster\n");
 //		for (double[] point : iterable_points)
 //			bw.write(Arrays.toString(point) +" --> "+model.predict(point)+"\n");
+		HashMap<Integer, Integer> cluster2count = new HashMap<Integer, Integer>();
 		for (Integer i : id2vector.keySet()){
 			double[] point = id2vector.get(i);
-			bw.write("vector id ["+i+"] --> "+model.predict(point)+"\n");
+			int cluster_predicted = model.predict(point);
+			bw.write("vector id ["+i+"] --> "+cluster_predicted+"\n");
+			Integer count = cluster2count.get(cluster_predicted);
+			if (count == null)
+				cluster2count.put(cluster_predicted, 1);
+			else
+				cluster2count.put(cluster_predicted, ++count);
 		}
 
+		bw.write("\n---- CLUSTER COUNT ----\n");
+		for (Integer id : cluster2count.keySet()){
+			Integer count = cluster2count.get(id);
+			bw.write("|Cluster["+ id +"]|\t"+count+"\n");
+		}
+		
 		bw.close();
 		System.exit(0);
 	}
