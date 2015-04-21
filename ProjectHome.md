@@ -1,0 +1,1 @@
+Academic projects on Apache MapReduce.
